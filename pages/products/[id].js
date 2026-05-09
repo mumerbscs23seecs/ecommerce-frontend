@@ -11,17 +11,28 @@ export default function ProductPage({ product }) {
   const [added, setAdded] = useState(false);
  
   function addToCart() {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const existing = cart.find(i => i._id === product._id);
-    if (existing) {
-      existing.qty += 1;
-    } else {
-      cart.push({ ...product, qty: 1 });
-    }
-    localStorage.setItem('cart', JSON.stringify(cart));
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+  // get or create a session ID — persists in localStorage
+  let sessionId = localStorage.getItem('sessionId');
+  if (!sessionId) {
+    sessionId = Math.random().toString(36).slice(2);
+    localStorage.setItem('sessionId', sessionId);
   }
+
+  fetch(`http://localhost:3002/cart/${sessionId}/add`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      productId: product._id,
+      name: product.name,
+      price: product.price
+    })
+  })
+    .then(res => res.json())
+    .then(() => {
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    });
+}
  
   return (
     <main style={{ maxWidth: 640, margin: '40px auto', padding: 24 }}>
